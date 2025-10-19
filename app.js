@@ -583,3 +583,89 @@ function preloadUrls(urls) {
   }
 }
 preloadUrls(memes.concat(itemDefs.map((i) => i.img)).concat(["6.gif"]));
+
+
+(function(){
+  const dirMap = {
+    up: [0, -1],
+    down: [0, 1],
+    left: [-1, 0],
+    right: [1, 0],
+  };
+
+  function handleMobileDir(dir){
+    if(!dir || !dirMap[dir]) return;
+    const [dx, dy] = dirMap[dir];
+    movePlayer(dx, dy);
+  }
+
+  let holdInterval = null;
+  function startHold(dir){
+    stopHold();
+    handleMobileDir(dir);
+    holdInterval = setInterval(()=> handleMobileDir(dir), 180);
+  }
+  function stopHold(){
+    if(holdInterval){ clearInterval(holdInterval); holdInterval = null; }
+  }
+
+  const mobileControls = document.getElementById('mobileControls');
+  if(mobileControls){
+    const buttons = mobileControls.querySelectorAll('.m-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const dir = btn.dataset.dir;
+        startHold(dir);
+      }, {passive:false});
+      btn.addEventListener('pointerup', (e) => { e.preventDefault(); stopHold(); }, {passive:false});
+      btn.addEventListener('pointercancel', stopHold);
+      btn.addEventListener('pointerleave', stopHold);
+    });
+
+    mobileControls.addEventListener('touchmove', (e)=> e.preventDefault(), {passive:false});
+  }
+
+  let touchStartPos = null;
+  const swipeThreshold = 24; // px
+
+  canvas.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) { touchStartPos = null; return; }
+    const t = e.touches[0];
+    touchStartPos = { x: t.clientX, y: t.clientY };
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', (e) => {
+    if(!touchStartPos) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartPos.x;
+    const dy = t.clientY - touchStartPos.y;
+    const absx = Math.abs(dx), absy = Math.abs(dy);
+    if(Math.max(absx, absy) >= swipeThreshold){
+      if(absx > absy) movePlayer(dx > 0 ? 1 : -1, 0);
+      else movePlayer(0, dy > 0 ? 1 : -1);
+    }
+    touchStartPos = null;
+  }, {passive:true});
+
+  if(mobileControls){
+    mobileControls.addEventListener('pointerenter', ()=> appRoot.setAttribute('aria-hidden', 'false'));
+  }
+
+})();
+
+function updatePlayerGifPosition() {
+  const displayedWidth = canvas.clientWidth;
+  const displayedHeight = canvas.clientHeight;
+  const scaleX = displayedWidth / canvasSize;
+  const scaleY = displayedHeight / canvasSize;
+  const px = Math.round(player.x * cellPx * scaleX + (cellPx * 0.5) * scaleX);
+  const py = Math.round(player.y * cellPx * scaleY + (cellPx * 0.5) * scaleY);
+  playerGif.style.left = `${px}px`;
+  playerGif.style.top = `${py}px`;
+}
+
+
+window.addEventListener("resize", () => {
+  requestAnimationFrame(updatePlayerGifPosition);
+});

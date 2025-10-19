@@ -66,9 +66,6 @@
         <div class="hud-title">Найдено:</div>
         <div class="itemsList" id="collectedList"></div>
         <div class="items-preview">
-          <!-- <img class="itemThumb" src="2.gif" alt="">
-      <img class="itemThumb" src="3.gif" alt="">
-      <img class="itemThumb" src="4.gif" alt=""> -->
         </div>
       </div>
     </div>
@@ -85,7 +82,14 @@
         </div>
       </div>
     </div>
-
+    <div id="mobileControls" class="mobile-controls" aria-hidden="false">
+      <button class="m-btn" data-dir="up" aria-label="Вверх">▲</button>
+      <div class="m-row">
+        <button class="m-btn" data-dir="left" aria-label="Влево">◀</button>
+        <button class="m-btn" data-dir="right" aria-label="Вправо">▶</button>
+      </div>
+      <button class="m-btn" data-dir="down" aria-label="Вниз">▼</button>
+    </div>
     <script src="app.js"></script>
   </body>
 </html>

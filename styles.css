@@ -486,3 +486,53 @@ canvas {
 .btn {
   animation: neonPulse 3.6s ease-in-out infinite;
 }
+
+
+
+
+.mobile-controls {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 12000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+.mobile-controls .m-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.m-btn {
+  min-width: 56px;
+  min-height: 56px;
+  padding: 8px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.05));
+  color: var(--text-main);
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+  backdrop-filter: blur(var(--glass-blur));
+  opacity: 0.95;
+}
+.m-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: inset 0 -6px 16px rgba(0,0,0,0.45);
+}
+@media (min-width: 981px) {
+  .mobile-controls { display: none !important; }
+}
+@media (max-width: 360px) {
+  .m-btn { min-width: 48px; min-height: 48px; font-size: 18px; }
+  .mobile-controls { left: 8px; bottom: 8px; gap: 6px; }
+}
