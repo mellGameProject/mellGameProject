@@ -558,3 +558,12 @@ canvas {
     gap: 6px;
   }
 }
+@media (max-width: 980px) {
+  .controls-box {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  .actions{
+    margin: 0 auto;
+  }
+}
