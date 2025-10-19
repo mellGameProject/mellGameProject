@@ -7,7 +7,17 @@
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="wrap">
+<div id="loader" class="loader" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="loader-card">
+    <div class="loader-title">Загрузка...</div>
+    <div class="progress-wrap">
+      <div id="progressBar" class="progress-bar" style="width:0%"></div>
+    </div>
+    <div id="progressText" class="progress-text">0%</div>
+  </div>
+</div>
+
+<div class="wrap" id="app" aria-hidden="true">
   <div class="panel" id="gameCard">
     <div class="topbar">
       <div class="title">Мем-лабиринт</div>
