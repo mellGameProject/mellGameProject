@@ -197,21 +197,25 @@ function setProgress(ratio) {
   progressText.textContent = pct + "%";
   loader.setAttribute("aria-valuenow", String(pct));
 }
-function hideLoader(){
-  if(!loader) return;
-  loader.style.transition = 'opacity 260ms ease, visibility 260ms';
-  loader.style.opacity = '0';
-  loader.style.visibility = 'hidden';
-  setTimeout(()=> {
-    try { loader.remove(); } catch(e) { loader.style.display = 'none'; }
+function hideLoader() {
+  if (!loader) return;
+  loader.style.transition = "opacity 260ms ease, visibility 260ms";
+  loader.style.opacity = "0";
+  loader.style.visibility = "hidden";
+  setTimeout(() => {
+    try {
+      loader.remove();
+    } catch (e) {
+      loader.style.display = "none";
+    }
   }, 280);
-  appRoot.removeAttribute('aria-hidden');
+  appRoot.removeAttribute("aria-hidden");
 }
-function showMobileControls(){
-  const mc = document.getElementById('mobileControls');
-  if(!mc) return;
-  mc.classList.add('show');
-  mc.setAttribute('aria-hidden','false');
+function showMobileControls() {
+  const mc = document.getElementById("mobileControls");
+  if (!mc) return;
+  mc.classList.add("show");
+  mc.setAttribute("aria-hidden", "false");
 }
 function initAfterLoad() {
   newMaze();
@@ -230,7 +234,9 @@ function updateTimer() {
   const diff = Math.floor((Date.now() - startTime) / 1000);
   const minutes = Math.floor(diff / 60);
   const seconds = diff % 60;
-  timerEl.textContent = `Время: ${minutes}:${seconds.toString().padStart(2, "0")}`;
+  timerEl.textContent = `Время: ${minutes}:${seconds
+    .toString()
+    .padStart(2, "0")}`;
 }
 const assets = buildAssetList();
 preloadAssets(assets, setProgress).then(() => {
@@ -315,120 +321,147 @@ function shuffleArray(a) {
     [a[i], a[j]] = [a[j], a[i]];
   }
 }
-function render(){
-  ctx.clearRect(0,0,canvasSize,canvasSize);
-
-  const gradFloor = ctx.createLinearGradient(0,0,0,canvasSize);
-  gradFloor.addColorStop(0, '#051b2a');
-  gradFloor.addColorStop(1, '#082836');
+function render() {
+  ctx.clearRect(0, 0, canvasSize, canvasSize);
+  const gradFloor = ctx.createLinearGradient(0, 0, 0, canvasSize);
+  gradFloor.addColorStop(0, "#051b2a");
+  gradFloor.addColorStop(1, "#082836");
   ctx.fillStyle = gradFloor;
-  ctx.fillRect(0,0,canvasSize,canvasSize);
-
+  ctx.fillRect(0, 0, canvasSize, canvasSize);
   ctx.save();
   ctx.globalAlpha = 0.08;
-  ctx.fillStyle = '#0b3146';
-  for(let y=0;y<size;y++){
-    for(let x=0;x<size;x++){
-      if(grid[y][x]===0){
-        if((x+y)%2===0){
-          ctx.fillRect(x*cellPx, y*cellPx, cellPx, cellPx);
+  ctx.fillStyle = "#0b3146";
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (grid[y][x] === 0) {
+        if ((x + y) % 2 === 0) {
+          ctx.fillRect(x * cellPx, y * cellPx, cellPx, cellPx);
         }
       }
     }
   }
   ctx.restore();
-
-  ctx.lineJoin = 'round';
-  const wallGrad = ctx.createLinearGradient(0,0,canvasSize,canvasSize);
-  wallGrad.addColorStop(0, '#07283a');
-  wallGrad.addColorStop(1, '#0a3b52');
-
-  for(let y=0;y<size;y++){
-    for(let x=0;x<size;x++){
-      if(grid[y][x] === 1){
-        const px = x*cellPx;
-        const py = y*cellPx;
+  ctx.lineJoin = "round";
+  const wallGrad = ctx.createLinearGradient(0, 0, canvasSize, canvasSize);
+  wallGrad.addColorStop(0, "#07283a");
+  wallGrad.addColorStop(1, "#0a3b52");
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (grid[y][x] === 1) {
+        const px = x * cellPx;
+        const py = y * cellPx;
         ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.75)';
-        ctx.shadowBlur = Math.max(4, cellPx*0.06);
+        ctx.shadowColor = "rgba(0,0,0,0.75)";
+        ctx.shadowBlur = Math.max(4, cellPx * 0.06);
         ctx.fillStyle = wallGrad;
-        roundRect(ctx, px+1, py+1, cellPx-2, cellPx-2, Math.max(4, Math.floor(cellPx*0.08)), true, false);
+        roundRect(
+          ctx,
+          px + 1,
+          py + 1,
+          cellPx - 2,
+          cellPx - 2,
+          Math.max(4, Math.floor(cellPx * 0.08)),
+          true,
+          false
+        );
         ctx.restore();
       }
     }
   }
-
-  for(const it of items){
-    if(it.got) continue;
-    const cx = it.x*cellPx + cellPx/2;
-    const cy = it.y*cellPx + cellPx/2;
-
+  for (const it of items) {
+    if (it.got) continue;
+    const cx = it.x * cellPx + cellPx / 2;
+    const cy = it.y * cellPx + cellPx / 2;
     ctx.save();
     ctx.beginPath();
-    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(10, cellPx*0.6));
-    glow.addColorStop(0, 'rgba(255,220,120,0.14)');
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    const glow = ctx.createRadialGradient(
+      cx,
+      cy,
+      0,
+      cx,
+      cy,
+      Math.max(10, cellPx * 0.6)
+    );
+    glow.addColorStop(0, "rgba(255,220,120,0.14)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = glow;
-    ctx.arc(cx, cy, Math.max(10, cellPx*0.6), 0, Math.PI*2);
+    ctx.arc(cx, cy, Math.max(10, cellPx * 0.6), 0, Math.PI * 2);
     ctx.fill();
     ctx.closePath();
     ctx.restore();
-
     ctx.save();
     ctx.beginPath();
-    const badgeGrad = ctx.createLinearGradient(cx - 10, cy - 10, cx + 10, cy + 10);
-    badgeGrad.addColorStop(0, '#fff1c6');
-    badgeGrad.addColorStop(1, '#ffd166');
+    const badgeGrad = ctx.createLinearGradient(
+      cx - 10,
+      cy - 10,
+      cx + 10,
+      cy + 10
+    );
+    badgeGrad.addColorStop(0, "#fff1c6");
+    badgeGrad.addColorStop(1, "#ffd166");
     ctx.fillStyle = badgeGrad;
-    ctx.shadowColor = 'rgba(0,0,0,0.45)';
-    ctx.shadowBlur = Math.max(6, cellPx*0.12);
-    ctx.arc(cx, cy, Math.max(8, cellPx*0.16), 0, Math.PI*2);
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = Math.max(6, cellPx * 0.12);
+    ctx.arc(cx, cy, Math.max(8, cellPx * 0.16), 0, Math.PI * 2);
     ctx.fill();
     ctx.closePath();
     ctx.restore();
-
     ctx.save();
-    ctx.font = `${Math.max(18, Math.floor(cellPx * 0.6))}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(it.def.icon || '★', cx, cy + 1);
+    ctx.font = `${Math.max(
+      18,
+      Math.floor(cellPx * 0.6)
+    )}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText(it.def.icon || "★", cx, cy + 1);
     ctx.restore();
   }
-
-  const fx = finish.x*cellPx + cellPx/2;
-  const fy = finish.y*cellPx + cellPx/2;
+  const fx = finish.x * cellPx + cellPx / 2;
+  const fy = finish.y * cellPx + cellPx / 2;
   ctx.save();
-  const finishGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, Math.max(12, cellPx*0.9));
-  finishGrad.addColorStop(0, 'rgba(180,240,255,0.14)');
-  finishGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  const finishGrad = ctx.createRadialGradient(
+    fx,
+    fy,
+    0,
+    fx,
+    fy,
+    Math.max(12, cellPx * 0.9)
+  );
+  finishGrad.addColorStop(0, "rgba(180,240,255,0.14)");
+  finishGrad.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = finishGrad;
   ctx.beginPath();
-  ctx.arc(fx, fy, Math.max(12, cellPx*0.9), 0, Math.PI*2);
+  ctx.arc(fx, fy, Math.max(12, cellPx * 0.9), 0, Math.PI * 2);
   ctx.fill();
   ctx.closePath();
   ctx.restore();
-
-  const pxCenter = player.x*cellPx + cellPx/2;
-  const pyCenter = player.y*cellPx + cellPx/2;
+  const pxCenter = player.x * cellPx + cellPx / 2;
+  const pyCenter = player.y * cellPx + cellPx / 2;
   ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  const aura = ctx.createRadialGradient(pxCenter, pyCenter, 0, pxCenter, pyCenter, Math.max(22, cellPx*1.4));
-  aura.addColorStop(0, 'rgba(110,190,255,0.18)');
-  aura.addColorStop(0.6, 'rgba(110,190,255,0.06)');
-  aura.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.globalCompositeOperation = "lighter";
+  const aura = ctx.createRadialGradient(
+    pxCenter,
+    pyCenter,
+    0,
+    pxCenter,
+    pyCenter,
+    Math.max(22, cellPx * 1.4)
+  );
+  aura.addColorStop(0, "rgba(110,190,255,0.18)");
+  aura.addColorStop(0.6, "rgba(110,190,255,0.06)");
+  aura.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = aura;
   ctx.beginPath();
-  ctx.arc(pxCenter, pyCenter, Math.max(22, cellPx*1.4), 0, Math.PI*2);
+  ctx.arc(pxCenter, pyCenter, Math.max(22, cellPx * 1.4), 0, Math.PI * 2);
   ctx.fill();
   ctx.closePath();
   ctx.restore();
-  ctx.globalCompositeOperation = 'source-over';
-
+  ctx.globalCompositeOperation = "source-over";
   ctx.save();
   ctx.beginPath();
-  ctx.fillStyle = 'rgba(255,255,255,0.03)';
-  ctx.arc(pxCenter, pyCenter, Math.max(3, cellPx*0.08), 0, Math.PI*2);
+  ctx.fillStyle = "rgba(255,255,255,0.03)";
+  ctx.arc(pxCenter, pyCenter, Math.max(3, cellPx * 0.08), 0, Math.PI * 2);
   ctx.fill();
   ctx.closePath();
   ctx.restore();
@@ -475,14 +508,17 @@ function updatePlayerGifPosition() {
   const visibleCellH = cellPx * scaleY;
   const maxFraction = 0.78;
   const minSizePx = 34;
-  const gifW = Math.max(minSizePx, Math.round(Math.min(visibleCellW, visibleCellH) * maxFraction));
+  const gifW = Math.max(
+    minSizePx,
+    Math.round(Math.min(visibleCellW, visibleCellH) * maxFraction)
+  );
   const gifH = gifW;
   playerGif.style.width = gifW + "px";
   playerGif.style.height = gifH + "px";
   lastGifW = gifW;
   lastGifH = gifH;
-  const cx = player.x * cellPx * scaleX + (cellPx * 0.5) * scaleX;
-  const cy = player.y * cellPx * scaleY + (cellPx * 0.5) * scaleY;
+  const cx = player.x * cellPx * scaleX + cellPx * 0.5 * scaleX;
+  const cy = player.y * cellPx * scaleY + cellPx * 0.5 * scaleY;
   const halfW = gifW / 2;
   const halfH = gifH / 2;
   const tx = Math.round(cx - halfW);
@@ -511,7 +547,7 @@ function checkItemPickup() {
       }, 160);
       if (memes[mi]) playerGif.src = memes[mi];
       startMemeSound(mi);
-      if (mi !=0) {
+      if (mi != 0) {
         revertTimer = setTimeout(() => {
           stopMemeSound();
           playerGif.src = memes[0];
@@ -545,7 +581,11 @@ function checkFinish() {
       const diff = Math.floor((Date.now() - startTime) / 1000);
       const minutes = Math.floor(diff / 60);
       const seconds = diff % 60;
-      document.getElementById("finishTime").textContent = `Время прохождения: ${minutes}:${seconds.toString().padStart(2, "0")}`;
+      document.getElementById(
+        "finishTime"
+      ).textContent = `Время прохождения: ${minutes}:${seconds
+        .toString()
+        .padStart(2, "0")}`;
     } else {
       document.getElementById("finishTime").textContent = "";
     }
@@ -567,19 +607,51 @@ document.getElementById("playAgain").addEventListener("click", () => {
 document
   .getElementById("closeModal")
   .addEventListener("click", () => closeModal());
-window.addEventListener("keydown", (e) => {
+let keyHold = { interval: null, code: null };
+function keyToDir(key) {
+  const k = String(key).toLowerCase();
+  if (["w", "ц", "arrowup"].includes(k)) return [0, -1];
+  if (["s", "ы", "arrowdown"].includes(k)) return [0, 1];
+  if (["a", "ф", "arrowleft"].includes(k)) return [-1, 0];
+  if (["d", "в", "arrowright"].includes(k)) return [1, 0];
+  return null;
+}
+const _keyDown = (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const dir = keyToDir(e.key);
+  if (!dir) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
   if (e.repeat) return;
-  const key = e.key.toLowerCase();
-  let moved = false;
-  const upSet = ["w", "ц", "arrowup"];
-  const downSet = ["s", "ы", "arrowdown"];
-  const leftSet = ["a", "ф", "arrowleft"];
-  const rightSet = ["d", "в", "arrowright"];
-  if (upSet.includes(key)) moved = movePlayer(0, -1);
-  if (downSet.includes(key)) moved = movePlayer(0, 1);
-  if (leftSet.includes(key)) moved = movePlayer(-1, 0);
-  if (rightSet.includes(key)) moved = movePlayer(1, 0);
-  if (moved) e.preventDefault();
+  const code = e.code || e.key;
+  if (keyHold.code === code) return;
+  keyHold.code = code;
+  if (keyHold.interval) {
+    clearInterval(keyHold.interval);
+    keyHold.interval = null;
+  }
+  movePlayer(dir[0], dir[1]);
+  keyHold.interval = setInterval(() => movePlayer(dir[0], dir[1]), 150);
+};
+const _keyUp = (e) => {
+  const dir = keyToDir(e.key);
+  if (!dir) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  if (keyHold.interval) {
+    clearInterval(keyHold.interval);
+    keyHold.interval = null;
+  }
+  keyHold.code = null;
+};
+window.addEventListener("keydown", _keyDown, { capture: true });
+window.addEventListener("keyup", _keyUp, { capture: true });
+window.addEventListener("blur", () => {
+  if (keyHold.interval) {
+    clearInterval(keyHold.interval);
+    keyHold.interval = null;
+  }
+  keyHold.code = null;
 });
 canvas.addEventListener("click", (ev) => {
   const rect = canvas.getBoundingClientRect();
@@ -607,71 +679,92 @@ function preloadUrls(urls) {
   }
 }
 preloadUrls(memes.concat(itemDefs.map((i) => i.img)).concat(["6.gif"]));
-
-(function(){
+(function () {
   const dirMap = {
     up: [0, -1],
     down: [0, 1],
     left: [-1, 0],
     right: [1, 0],
   };
-
-  function handleMobileDir(dir){
-    if(!dir || !dirMap[dir]) return;
+  function handleMobileDir(dir) {
+    if (!dir || !dirMap[dir]) return;
     const [dx, dy] = dirMap[dir];
     movePlayer(dx, dy);
   }
-
   let holdInterval = null;
-  function startHold(dir){
+  function startHold(dir) {
     stopHold();
     handleMobileDir(dir);
-    holdInterval = setInterval(()=> handleMobileDir(dir), 180);
+    holdInterval = setInterval(() => handleMobileDir(dir), 180);
   }
-  function stopHold(){
-    if(holdInterval){ clearInterval(holdInterval); holdInterval = null; }
+  function stopHold() {
+    if (holdInterval) {
+      clearInterval(holdInterval);
+      holdInterval = null;
+    }
   }
-
-  const mobileControls = document.getElementById('mobileControls');
-  if(mobileControls){
-    const buttons = mobileControls.querySelectorAll('.m-btn');
-    buttons.forEach(btn => {
-      btn.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        const dir = btn.dataset.dir;
-        startHold(dir);
-      }, {passive:false});
-      btn.addEventListener('pointerup', (e) => { e.preventDefault(); stopHold(); }, {passive:false});
-      btn.addEventListener('pointercancel', stopHold);
-      btn.addEventListener('pointerleave', stopHold);
+  const mobileControls = document.getElementById("mobileControls");
+  if (mobileControls) {
+    const buttons = mobileControls.querySelectorAll(".m-btn");
+    buttons.forEach((btn) => {
+      btn.addEventListener(
+        "pointerdown",
+        (e) => {
+          e.preventDefault();
+          const dir = btn.dataset.dir;
+          startHold(dir);
+        },
+        { passive: false }
+      );
+      btn.addEventListener(
+        "pointerup",
+        (e) => {
+          e.preventDefault();
+          stopHold();
+        },
+        { passive: false }
+      );
+      btn.addEventListener("pointercancel", stopHold);
+      btn.addEventListener("pointerleave", stopHold);
     });
-    mobileControls.addEventListener('touchmove', (e)=> e.preventDefault(), {passive:false});
+    mobileControls.addEventListener("touchmove", (e) => e.preventDefault(), {
+      passive: false,
+    });
   }
-
   let touchStartPos = null;
   const swipeThreshold = 24;
-
-  canvas.addEventListener('touchstart', (e) => {
-    if(e.touches.length !== 1) { touchStartPos = null; return; }
-    const t = e.touches[0];
-    touchStartPos = { x: t.clientX, y: t.clientY };
-  }, {passive:true});
-
-  canvas.addEventListener('touchend', (e) => {
-    if(!touchStartPos) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - touchStartPos.x;
-    const dy = t.clientY - touchStartPos.y;
-    const absx = Math.abs(dx), absy = Math.abs(dy);
-    if(Math.max(absx, absy) >= swipeThreshold){
-      if(absx > absy) movePlayer(dx > 0 ? 1 : -1, 0);
-      else movePlayer(0, dy > 0 ? 1 : -1);
-    }
-    touchStartPos = null;
-  }, {passive:true});
-
-  if(mobileControls){
-    mobileControls.addEventListener('pointerenter', ()=> appRoot.setAttribute('aria-hidden', 'false'));
+  canvas.addEventListener(
+    "touchstart",
+    (e) => {
+      if (e.touches.length !== 1) {
+        touchStartPos = null;
+        return;
+      }
+      const t = e.touches[0];
+      touchStartPos = { x: t.clientX, y: t.clientY };
+    },
+    { passive: true }
+  );
+  canvas.addEventListener(
+    "touchend",
+    (e) => {
+      if (!touchStartPos) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartPos.x;
+      const dy = t.clientY - touchStartPos.y;
+      const absx = Math.abs(dx),
+        absy = Math.abs(dy);
+      if (Math.max(absx, absy) >= swipeThreshold) {
+        if (absx > absy) movePlayer(dx > 0 ? 1 : -1, 0);
+        else movePlayer(0, dy > 0 ? 1 : -1);
+      }
+      touchStartPos = null;
+    },
+    { passive: true }
+  );
+  if (mobileControls) {
+    mobileControls.addEventListener("pointerenter", () =>
+      appRoot.setAttribute("aria-hidden", "false")
+    );
   }
-
 })();
