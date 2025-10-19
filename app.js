@@ -19,11 +19,14 @@ const progressBar = document.getElementById("progressBar");
 const progressText = document.getElementById("progressText");
 const timerEl = document.getElementById("timer");
 
-const memes = ["1.gif", "2.gif", "3.gif", "4.gif", "5.gif"];
+const memes = ["1.gif", "2.gif", "3.gif", "4.gif", "7.gif", "8.gif", "9.gif"];
 const itemDefs = [
   { name: "Казино", img: "2.gif", givesMemeIndex: 1, icon: "🎰" },
   { name: "Квартира", img: "3.gif", givesMemeIndex: 2, icon: "🏢" },
   { name: "Монетка", img: "4.gif", givesMemeIndex: 3, icon: "🪙" },
+  { name: "Подарок", img: "7.gif", givesMemeIndex: 4, icon: "🎁" },
+  { name: "Деньги", img: "8.gif", givesMemeIndex: 5, icon: "💸" },
+  { name: "Алмаз", img: "9.gif", givesMemeIndex: 6, icon: "💎" },
 ];
 let grid,
   player = { x: 1, y: 1 },
@@ -194,10 +197,17 @@ function setProgress(ratio) {
   progressText.textContent = pct + "%";
   loader.setAttribute("aria-valuenow", String(pct));
 }
-function hideLoader() {
-  loader.classList.add("hidden");
-  appRoot.removeAttribute("aria-hidden");
+function hideLoader(){
+  if(!loader) return;
+  loader.style.transition = 'opacity 260ms ease, visibility 260ms';
+  loader.style.opacity = '0';
+  loader.style.visibility = 'hidden';
+  setTimeout(()=> {
+    try { loader.remove(); } catch(e) { loader.style.display = 'none'; }
+  }, 280);
+  appRoot.removeAttribute('aria-hidden');
 }
+
 function initAfterLoad() {
   newMaze();
   tryPlayBackground();
@@ -301,69 +311,120 @@ function shuffleArray(a) {
     [a[i], a[j]] = [a[j], a[i]];
   }
 }
-function render() {
-  ctx.clearRect(0, 0, canvasSize, canvasSize);
-  ctx.fillStyle = "#071428";
-  ctx.fillRect(0, 0, canvasSize, canvasSize);
-  for (let y = 0; y < size; y++)
-    for (let x = 0; x < size; x++) {
-      const px = x * cellPx;
-      const py = y * cellPx;
-      if (grid[y][x] === 1) {
-        ctx.fillStyle = "#0b2036";
-        ctx.fillRect(px, py, cellPx, cellPx);
-      } else {
-        ctx.fillStyle = "#071a2a";
-        ctx.fillRect(px, py, cellPx, cellPx);
-      }
-    }
-  ctx.strokeStyle = "rgba(10,20,30,0.7)";
-  ctx.lineWidth = Math.max(1, cellPx * 0.06);
-  for (let y = 0; y < size; y++)
-    for (let x = 0; x < size; x++)
-      if (grid[y][x] === 1) {
-        const px = x * cellPx;
-        const py = y * cellPx;
-        const r = Math.max(1, Math.floor(cellPx * 0.08));
-        ctx.fillStyle = "#08283a";
-        roundRect(ctx, px + 1, py + 1, cellPx - 2, cellPx - 2, r, true, false);
-      }
-  for (const it of items)
-    if (!it.got) {
-      const cx = it.x * cellPx + cellPx / 2;
-      const cy = it.y * cellPx + cellPx / 2;
-      ctx.save();
-      ctx.beginPath();
-      ctx.fillStyle = "#ffd166";
-      ctx.arc(cx, cy, Math.max(6, cellPx * 0.14), 0, Math.PI * 2);
-      ctx.fill();
-      ctx.closePath();
-      ctx.restore();
-      const icon = it.def.icon || "★";
-      ctx.font = `${Math.max(
-        14,
-        Math.floor(cellPx * 0.44)
-      )}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = "#132b3f";
-      ctx.fillText(icon, cx, cy + 1);
-    }
-  const fx = finish.x * cellPx + cellPx / 2;
-  const fy = finish.y * cellPx + cellPx / 2;
+function render(){
+  ctx.clearRect(0,0,canvasSize,canvasSize);
+
+  const gradFloor = ctx.createLinearGradient(0,0,0,canvasSize);
+  gradFloor.addColorStop(0, '#051b2a');
+  gradFloor.addColorStop(1, '#082836');
+  ctx.fillStyle = gradFloor;
+  ctx.fillRect(0,0,canvasSize,canvasSize);
+
   ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = '#0b3146';
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      if(grid[y][x]===0){
+        if((x+y)%2===0){
+          ctx.fillRect(x*cellPx, y*cellPx, cellPx, cellPx);
+        }
+      }
+    }
+  }
+  ctx.restore();
+
+  ctx.lineJoin = 'round';
+  const wallGrad = ctx.createLinearGradient(0,0,canvasSize,canvasSize);
+  wallGrad.addColorStop(0, '#07283a');
+  wallGrad.addColorStop(1, '#0a3b52');
+
+  for(let y=0;y<size;y++){
+    for(let x=0;x<size;x++){
+      if(grid[y][x] === 1){
+        const px = x*cellPx;
+        const py = y*cellPx;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.75)';
+        ctx.shadowBlur = Math.max(4, cellPx*0.06);
+        ctx.fillStyle = wallGrad;
+        roundRect(ctx, px+1, py+1, cellPx-2, cellPx-2, Math.max(4, Math.floor(cellPx*0.08)), true, false);
+        ctx.restore();
+      }
+    }
+  }
+
+  for(const it of items){
+    if(it.got) continue;
+    const cx = it.x*cellPx + cellPx/2;
+    const cy = it.y*cellPx + cellPx/2;
+
+    ctx.save();
+    ctx.beginPath();
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(10, cellPx*0.6));
+    glow.addColorStop(0, 'rgba(255,220,120,0.14)');
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.arc(cx, cy, Math.max(10, cellPx*0.6), 0, Math.PI*2);
+    ctx.fill();
+    ctx.closePath();
+    ctx.restore();
+
+    ctx.save();
+    ctx.beginPath();
+    const badgeGrad = ctx.createLinearGradient(cx - 10, cy - 10, cx + 10, cy + 10);
+    badgeGrad.addColorStop(0, '#fff1c6');
+    badgeGrad.addColorStop(1, '#ffd166');
+    ctx.fillStyle = badgeGrad;
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = Math.max(6, cellPx*0.12);
+    ctx.arc(cx, cy, Math.max(8, cellPx*0.16), 0, Math.PI*2);
+    ctx.fill();
+    ctx.closePath();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `${Math.max(18, Math.floor(cellPx * 0.6))}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(it.def.icon || '★', cx, cy + 1);
+    ctx.restore();
+  }
+
+  const fx = finish.x*cellPx + cellPx/2;
+  const fy = finish.y*cellPx + cellPx/2;
+  ctx.save();
+  const finishGrad = ctx.createRadialGradient(fx, fy, 0, fx, fy, Math.max(12, cellPx*0.9));
+  finishGrad.addColorStop(0, 'rgba(180,240,255,0.14)');
+  finishGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = finishGrad;
   ctx.beginPath();
-  ctx.fillStyle = "rgba(125,220,255,0.08)";
-  ctx.arc(fx, fy, Math.max(8, cellPx * 0.22), 0, Math.PI * 2);
+  ctx.arc(fx, fy, Math.max(12, cellPx*0.9), 0, Math.PI*2);
   ctx.fill();
   ctx.closePath();
   ctx.restore();
-  const px = player.x * cellPx + cellPx / 2;
-  const py = player.y * cellPx + cellPx / 2;
+
+  const pxCenter = player.x*cellPx + cellPx/2;
+  const pyCenter = player.y*cellPx + cellPx/2;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const aura = ctx.createRadialGradient(pxCenter, pyCenter, 0, pxCenter, pyCenter, Math.max(22, cellPx*1.4));
+  aura.addColorStop(0, 'rgba(110,190,255,0.18)');
+  aura.addColorStop(0.6, 'rgba(110,190,255,0.06)');
+  aura.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(pxCenter, pyCenter, Math.max(22, cellPx*1.4), 0, Math.PI*2);
+  ctx.fill();
+  ctx.closePath();
+  ctx.restore();
+  ctx.globalCompositeOperation = 'source-over';
+
   ctx.save();
   ctx.beginPath();
-  ctx.fillStyle = "rgba(255,255,255,0.02)";
-  ctx.arc(px, py, Math.max(3, cellPx * 0.08), 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(255,255,255,0.03)';
+  ctx.arc(pxCenter, pyCenter, Math.max(3, cellPx*0.08), 0, Math.PI*2);
   ctx.fill();
   ctx.closePath();
   ctx.restore();
@@ -424,7 +485,7 @@ function checkItemPickup() {
       );
       if (memes[mi]) playerGif.src = memes[mi];
       startMemeSound(mi);
-      if (mi === 1 || mi === 2 || mi === 3) {
+      if (mi !=0) {
         revertTimer = setTimeout(() => {
           stopMemeSound();
           playerGif.src = memes[0];
