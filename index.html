@@ -1,76 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Мем-лабиринт</title>
-<link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-<div id="loader" class="loader" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-  <div class="loader-card">
-    <div class="loader-title">Загрузка...</div>
-    <div class="progress-wrap">
-      <div id="progressBar" class="progress-bar" style="width:0%"></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>mell-лабиринт</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="header">
+      <h1 class="gameTitle">mellstroy.game</h1>
+      <div id="timer" class="timer">Время: 0:00</div>
     </div>
-    <div id="progressText" class="progress-text">0%</div>
-  </div>
-</div>
 
-<div class="wrap" id="app" aria-hidden="true">
-  <div class="panel" id="gameCard">
-    <div class="topbar">
-      <div class="title">Мем-лабиринт</div>
-      <div class="controls-row">
-        <div class="score" id="score">Собрано: 0</div>
-        <button id="musicToggle" class="musicBtn" aria-pressed="false">🔈</button>
+    <div
+      id="loader"
+      class="loader"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+    >
+      <div class="loader-card">
+        <div class="loader-title">Загрузка...</div>
+        <div class="progress-wrap">
+          <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        <div id="progressText" class="progress-text">0%</div>
       </div>
     </div>
 
-    <div id="mazeContainer">
-      <canvas id="mazeCanvas" width="680" height="680"></canvas>
-      <img id="playerGif" src="1.gif" alt="player" />
-    </div>
+    <div class="wrap" id="app" aria-hidden="true">
+      <div class="panel" id="gameCard">
+        <div class="topbar">
+          <div class="title">Mell-лабиринт</div>
+          <div class="controls-row">
+            <div class="score" id="score">Собрано: 0</div>
+            <button id="musicToggle" class="musicBtn" aria-pressed="false">
+              🔈
+            </button>
+          </div>
+        </div>
 
-    <div class="bottom-row">
-      <div class="controls-box">
-        <div class="keys" aria-hidden>
-          <div class="key">W/Ц</div>
-          <div class="key">A/Ф</div>
-          <div class="key">S/Ы</div>
-          <div class="key">D/В</div>
+        <div id="mazeContainer">
+          <canvas id="mazeCanvas" width="680" height="680"></canvas>
+          <img id="playerGif" src="1.gif" alt="player" />
+        </div>
+
+        <div class="bottom-row">
+          <div class="controls-box">
+            <div class="keys" aria-hidden>
+              <div class="key">W/Ц</div>
+              <div class="key">A/Ф</div>
+              <div class="key">S/Ы</div>
+              <div class="key">D/В</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="regenBtn" class="btn secondary">Новый лабиринт</button>
+          </div>
         </div>
       </div>
 
-      <div class="actions">
-        <button id="regenBtn" class="btn secondary">Новый лабиринт</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="panel hud">
-    <div class="hud-title">Мемы</div>
-    <div class="itemsList" id="collectedList"></div>
-    <div class="items-preview">
-      <!-- <img class="itemThumb" src="2.gif" alt="">
+      <div class="panel hud">
+        <div class="hud-title">Найдено:</div>
+        <div class="itemsList" id="collectedList"></div>
+        <div class="items-preview">
+          <!-- <img class="itemThumb" src="2.gif" alt="">
       <img class="itemThumb" src="3.gif" alt="">
       <img class="itemThumb" src="4.gif" alt=""> -->
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div id="finishModal" class="modal" role="dialog" aria-hidden="true">
-  <div class="modalCard">
-    <h2 id="finishTitle">Финиш!</h2>
-    <img id="finishGif" class="memegif" src="6.gif" alt="finish">
-    <p id="finishText">Ты дошёл до конца!</p>
-    <div class="modal-actions">
-      <button id="playAgain" class="btn">Ещё один лабиринт</button>
-      <button id="closeModal" class="btn secondary">Закрыть</button>
+    <div id="finishModal" class="modal" role="dialog" aria-hidden="true">
+      <div class="modalCard">
+        <h2 id="finishTitle">Финиш!</h2>
+        <img id="finishGif" class="memegif" src="6.gif" alt="finish" />
+        <p id="finishText">Ты дошёл до конца!</p>
+        <p id="finishTime" class="small"></p>
+        <div class="modal-actions">
+          <button id="playAgain" class="btn">Ещё один лабиринт</button>
+          <button id="closeModal" class="btn secondary">Закрыть</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
