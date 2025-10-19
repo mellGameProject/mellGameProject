@@ -207,7 +207,12 @@ function hideLoader(){
   }, 280);
   appRoot.removeAttribute('aria-hidden');
 }
-
+function showMobileControls(){
+  const mc = document.getElementById('mobileControls');
+  if(!mc) return;
+  mc.classList.add('show');
+  mc.setAttribute('aria-hidden','false');
+}
 function initAfterLoad() {
   newMaze();
   tryPlayBackground();
@@ -225,15 +230,14 @@ function updateTimer() {
   const diff = Math.floor((Date.now() - startTime) / 1000);
   const minutes = Math.floor(diff / 60);
   const seconds = diff % 60;
-  timerEl.textContent = `Время: ${minutes}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
+  timerEl.textContent = `Время: ${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 const assets = buildAssetList();
 preloadAssets(assets, setProgress).then(() => {
   setTimeout(() => {
     hideLoader();
     initAfterLoad();
+    showMobileControls();
   }, 250);
 });
 function newMaze() {
@@ -458,11 +462,34 @@ function movePlayer(dx, dy) {
   checkFinish();
   return true;
 }
+let lastTx = 0;
+let lastTy = 0;
+let lastGifW = 76;
+let lastGifH = 76;
 function updatePlayerGifPosition() {
-  const x = player.x * cellPx + cellPx / 2;
-  const y = player.y * cellPx + cellPx / 2;
-  playerGif.style.left = `${x}px`;
-  playerGif.style.top = `${y}px`;
+  const displayedWidth = canvas.clientWidth;
+  const displayedHeight = canvas.clientHeight;
+  const scaleX = displayedWidth / canvasSize;
+  const scaleY = displayedHeight / canvasSize;
+  const visibleCellW = cellPx * scaleX;
+  const visibleCellH = cellPx * scaleY;
+  const maxFraction = 0.78;
+  const minSizePx = 34;
+  const gifW = Math.max(minSizePx, Math.round(Math.min(visibleCellW, visibleCellH) * maxFraction));
+  const gifH = gifW;
+  playerGif.style.width = gifW + "px";
+  playerGif.style.height = gifH + "px";
+  lastGifW = gifW;
+  lastGifH = gifH;
+  const cx = player.x * cellPx * scaleX + (cellPx * 0.5) * scaleX;
+  const cy = player.y * cellPx * scaleY + (cellPx * 0.5) * scaleY;
+  const halfW = gifW / 2;
+  const halfH = gifH / 2;
+  const tx = Math.round(cx - halfW);
+  const ty = Math.round(cy - halfH);
+  lastTx = tx;
+  lastTy = ty;
+  playerGif.style.transform = `translate3d(${tx}px, ${ty}px, 0) scale(1)`;
 }
 function checkItemPickup() {
   for (const it of items) {
@@ -478,11 +505,10 @@ function checkItemPickup() {
         revertTimer = null;
       }
       stopMemeSound();
-      playerGif.style.transform = "translate(-50%,-50%) scale(1.05)";
-      setTimeout(
-        () => (playerGif.style.transform = "translate(-50%,-50%) scale(1)"),
-        160
-      );
+      playerGif.style.transform = `translate3d(${lastTx}px, ${lastTy}px, 0) scale(1.05)`;
+      setTimeout(() => {
+        playerGif.style.transform = `translate3d(${lastTx}px, ${lastTy}px, 0) scale(1)`;
+      }, 160);
       if (memes[mi]) playerGif.src = memes[mi];
       startMemeSound(mi);
       if (mi !=0) {
@@ -519,11 +545,7 @@ function checkFinish() {
       const diff = Math.floor((Date.now() - startTime) / 1000);
       const minutes = Math.floor(diff / 60);
       const seconds = diff % 60;
-      document.getElementById(
-        "finishTime"
-      ).textContent = `Время прохождения: ${minutes}:${seconds
-        .toString()
-        .padStart(2, "0")}`;
+      document.getElementById("finishTime").textContent = `Время прохождения: ${minutes}:${seconds.toString().padStart(2, "0")}`;
     } else {
       document.getElementById("finishTime").textContent = "";
     }
@@ -571,7 +593,9 @@ canvas.addEventListener("click", (ev) => {
   else movePlayer(0, dy > 0 ? 1 : -1);
 });
 document.getElementById("regenBtn").addEventListener("click", () => newMaze());
-window.addEventListener("resize", updatePlayerGifPosition);
+window.addEventListener("resize", () => {
+  requestAnimationFrame(updatePlayerGifPosition);
+});
 setTimeout(updatePlayerGifPosition, 50);
 finishModal.addEventListener("click", (e) => {
   if (e.target === finishModal) closeModal();
@@ -583,7 +607,6 @@ function preloadUrls(urls) {
   }
 }
 preloadUrls(memes.concat(itemDefs.map((i) => i.img)).concat(["6.gif"]));
-
 
 (function(){
   const dirMap = {
@@ -622,12 +645,11 @@ preloadUrls(memes.concat(itemDefs.map((i) => i.img)).concat(["6.gif"]));
       btn.addEventListener('pointercancel', stopHold);
       btn.addEventListener('pointerleave', stopHold);
     });
-
     mobileControls.addEventListener('touchmove', (e)=> e.preventDefault(), {passive:false});
   }
 
   let touchStartPos = null;
-  const swipeThreshold = 24; // px
+  const swipeThreshold = 24;
 
   canvas.addEventListener('touchstart', (e) => {
     if(e.touches.length !== 1) { touchStartPos = null; return; }
@@ -653,19 +675,3 @@ preloadUrls(memes.concat(itemDefs.map((i) => i.img)).concat(["6.gif"]));
   }
 
 })();
-
-function updatePlayerGifPosition() {
-  const displayedWidth = canvas.clientWidth;
-  const displayedHeight = canvas.clientHeight;
-  const scaleX = displayedWidth / canvasSize;
-  const scaleY = displayedHeight / canvasSize;
-  const px = Math.round(player.x * cellPx * scaleX + (cellPx * 0.5) * scaleX);
-  const py = Math.round(player.y * cellPx * scaleY + (cellPx * 0.5) * scaleY);
-  playerGif.style.left = `${px}px`;
-  playerGif.style.top = `${py}px`;
-}
-
-
-window.addEventListener("resize", () => {
-  requestAnimationFrame(updatePlayerGifPosition);
-});

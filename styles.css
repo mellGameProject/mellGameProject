@@ -104,7 +104,7 @@ body::after {
   background-clip: text;
   color: transparent;
   text-shadow: 0 12px 50px rgba(154, 0, 255, 0.08);
-  line-height: 1.06;
+  line-height: 1.5;
 }
 .timer {
   font-size: 1.05rem;
@@ -209,16 +209,16 @@ canvas {
   position: absolute;
   width: 76px;
   height: 76px;
-  transform: translate(-50%, -50%);
+  transform-origin: center center;
   pointer-events: none;
-  border-radius: 16px;
+  border-radius: 12px;
   border: 3px solid rgba(255, 255, 255, 0.06);
   transition: transform 0.14s ease, box-shadow 0.16s;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  will-change: transform, width, height;
 }
 #playerGif.active {
   box-shadow: 0 26px 90px rgba(0, 255, 213, 0.18);
-  transform: translate(-50%, -50%) scale(1.03);
 }
 
 .bottom-row {
@@ -487,13 +487,11 @@ canvas {
   animation: neonPulse 3.6s ease-in-out infinite;
 }
 
-
-
-
 .mobile-controls {
   position: fixed;
-  left: 16px;
+  right: 16px;
   bottom: 16px;
+  left: auto;
   z-index: 12000;
   display: flex;
   flex-direction: column;
@@ -502,6 +500,15 @@ canvas {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 220ms ease, transform 220ms ease, visibility 220ms;
+}
+.mobile-controls.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 .mobile-controls .m-row {
   display: flex;
@@ -518,21 +525,36 @@ canvas {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.05));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    rgba(0, 0, 0, 0.05)
+  );
   color: var(--text-main);
-  border: 1px solid rgba(255,255,255,0.04);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(var(--glass-blur));
   opacity: 0.95;
+  touch-action: none;
 }
 .m-btn:active {
   transform: translateY(1px) scale(0.98);
-  box-shadow: inset 0 -6px 16px rgba(0,0,0,0.45);
+  box-shadow: inset 0 -6px 16px rgba(0, 0, 0, 0.45);
 }
 @media (min-width: 981px) {
-  .mobile-controls { display: none !important; }
+  .mobile-controls {
+    display: none !important;
+  }
 }
-@media (max-width: 360px) {
-  .m-btn { min-width: 48px; min-height: 48px; font-size: 18px; }
-  .mobile-controls { left: 8px; bottom: 8px; gap: 6px; }
+@media (max-width: 420px) {
+  .m-btn {
+    min-width: 48px;
+    min-height: 48px;
+    font-size: 18px;
+  }
+  .mobile-controls {
+    right: 8px;
+    bottom: 8px;
+    gap: 6px;
+  }
 }
