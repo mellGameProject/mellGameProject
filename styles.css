@@ -21,7 +21,7 @@
   --maze-floor-2: #07183f;
   --maze-wall-1: #120a3a;
   --maze-wall-2: #1b0a2b;
-  --maze-glow: rgba(0, 255, 213, 0.12);
+  --maze-glow: rgba(255, 215, 90, 0.16);
   --neon-1: #00ffd5;
   --neon-2: #9a00ff;
   --neon-3: #ffd700;
@@ -36,17 +36,14 @@ body {
   margin: 0;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial;
-  background: radial-gradient(
-      900px 500px at 10% 10%,
-      rgba(0, 255, 213, 0.03),
-      transparent
-    ),
-    radial-gradient(
-      700px 380px at 90% 80%,
-      rgba(255, 45, 184, 0.03),
-      transparent
-    ),
-    linear-gradient(180deg, var(--bg-dark-1), var(--bg-dark-2));
+      background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)),
+    url("unnamed.webp");
+  background-repeat: repeat;
+  background-size: 200px 200px; /* подберите под размер вашей плитки */
+  background-position: center;
+  background-attachment: fixed;
+  /* background: linear-gradient(120deg, #231d5a, #302b63, #24243e); */
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -98,14 +95,69 @@ body::after {
   margin: 0;
   font-weight: 900;
   letter-spacing: 0.6px;
-  text-transform: lowercase;
-  background: var(--accent-gradient);
+  text-transform: uppercase;
+  background: linear-gradient(
+    90deg,
+    #00ffd5,
+    #9a00ff,
+    #ff2db8,
+    #ffd700,
+    #00ffd5
+  );
+  background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  text-shadow: 0 12px 50px rgba(154, 0, 255, 0.08);
   line-height: 1.5;
+  position: relative;
+  z-index: 3;
+  text-shadow: 0 6px 18px rgba(0, 255, 213, 0.06),
+    0 12px 36px rgba(154, 0, 255, 0.06), 0 0 24px rgba(255, 215, 90, 0.06);
+  animation: titleGradientShift 8s linear infinite,
+    titleGlowPulse 3.6s ease-in-out infinite;
 }
+.gameTitle::after {
+  content: "";
+  position: absolute;
+  inset: -6px -20px -26px -20px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 213, 0.06),
+    rgba(154, 0, 255, 0.06),
+    rgba(255, 215, 90, 0.04)
+  );
+  filter: blur(18px);
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+@keyframes titleGradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+@keyframes titleGlowPulse {
+  0% {
+    text-shadow: 0 6px 14px rgba(0, 255, 213, 0.04),
+      0 10px 30px rgba(154, 0, 255, 0.04);
+  }
+  50% {
+    text-shadow: 0 12px 48px rgba(0, 255, 213, 0.1),
+      0 20px 70px rgba(154, 0, 255, 0.12);
+  }
+  100% {
+    text-shadow: 0 6px 14px rgba(0, 255, 213, 0.04),
+      0 10px 30px rgba(154, 0, 255, 0.04);
+  }
+}
+
 .timer {
   font-size: 1.05rem;
   color: var(--muted);
@@ -172,6 +224,22 @@ body::after {
   box-shadow: inset 0 -6px 18px rgba(0, 0, 0, 0.45);
 }
 
+.coinCounter {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02),
+    rgba(0, 0, 0, 0.03)
+  );
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  color: #ffd966;
+  box-shadow: inset 0 -6px 18px rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 #mazeContainer {
   position: relative;
   width: 100%;
@@ -203,6 +271,7 @@ canvas {
   height: 100%;
   display: block;
   filter: contrast(1.05) saturate(1.12);
+  will-change: transform;
 }
 
 #playerGif {
@@ -567,3 +636,4 @@ canvas {
     margin: 0 auto;
   }
 }
+

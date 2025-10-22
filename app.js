@@ -7,6 +7,7 @@ canvas.width = canvasSize;
 canvas.height = canvasSize;
 const playerGif = document.getElementById("playerGif");
 const scoreEl = document.getElementById("score");
+const coinCounterEl = document.getElementById("coinCounter");
 const collectedList = document.getElementById("collectedList");
 const finishModal = document.getElementById("finishModal");
 const finishGif = document.getElementById("finishGif");
@@ -29,11 +30,14 @@ const itemDefs = [
   { name: "Алмаз", img: "9.gif", givesMemeIndex: 6, icon: "💎" },
 ];
 let grid,
+  cellColors,
   player = { x: 1, y: 1 },
   finish = { x: size - 2, y: size - 2 },
   items = [],
+  coins = [],
   collected = [],
   score = 0,
+  coinCount = 0,
   revertTimer = null;
 const bgAudio = new Audio("backSound.mp3");
 bgAudio.loop = true;
@@ -43,6 +47,12 @@ let bgWasPlayingBeforeMeme = false;
 let memeAudio = null;
 let startTime = null;
 let timerInterval = null;
+
+const staticCanvas = document.createElement("canvas");
+staticCanvas.width = canvasSize;
+staticCanvas.height = canvasSize;
+const sCtx = staticCanvas.getContext("2d");
+
 function getSoundForMemeIndex(mi) {
   const gifName = memes[mi] || "";
   const base = gifName.replace(/\.[^/.]+$/, "");
@@ -287,29 +297,49 @@ function newMaze() {
   player = { x: 1, y: 1 };
   finish = { x: size - 2, y: size - 2 };
   items = [];
+  coins = [];
   const available = [];
   for (let y = 1; y < size - 1; y++)
-    for (let x = 1; x < size - 1; x++)
+    for (let x = 1; x < size - 1; x++) {
       if (
         grid[y][x] === 0 &&
         !(x === player.x && y === player.y) &&
         !(x === finish.x && y === finish.y)
       )
         available.push({ x, y });
+    }
   shuffleArray(available);
   for (let i = 0; i < Math.min(itemDefs.length, available.length); i++) {
     const a = available[i];
     items.push({ x: a.x, y: a.y, def: itemDefs[i], got: false });
   }
+  const used = new Set();
+  items.forEach((it) => used.add(it.x + "," + it.y));
+  let coinSlots = available.slice(items.length);
+  shuffleArray(coinSlots);
+  const coinCountTarget = Math.min(
+    30,
+    Math.max(8, Math.floor(available.length / 4))
+  );
+  for (let i = 0; i < Math.min(coinCountTarget, coinSlots.length); i++) {
+    const c = coinSlots[i];
+    if (used.has(c.x + "," + c.y)) continue;
+    coins.push({ x: c.x, y: c.y, taken: false });
+    used.add(c.x + "," + c.y);
+  }
   collected = [];
   score = 0;
+  coinCount = 0;
   collectedList.innerHTML = "";
+  updateCoinCounter();
   if (revertTimer) {
     clearTimeout(revertTimer);
     revertTimer = null;
   }
   stopMemeSound();
   playerGif.src = memes[0];
+  generateCellColors();
+  drawStaticMaze();
   updateHUD();
   render();
   updatePlayerGifPosition();
@@ -321,41 +351,46 @@ function shuffleArray(a) {
     [a[i], a[j]] = [a[j], a[i]];
   }
 }
-function render() {
-  ctx.clearRect(0, 0, canvasSize, canvasSize);
-  const gradFloor = ctx.createLinearGradient(0, 0, 0, canvasSize);
-  gradFloor.addColorStop(0, "#051b2a");
-  gradFloor.addColorStop(1, "#082836");
-  ctx.fillStyle = gradFloor;
-  ctx.fillRect(0, 0, canvasSize, canvasSize);
-  ctx.save();
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = "#0b3146";
+function generateCellColors() {
+  cellColors = Array.from({ length: size }, () => Array(size).fill(null));
+  const seed = Math.floor(Math.random() * 1000000);
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
+      const base = (x * 97 + y * 61 + seed) % 360;
       if (grid[y][x] === 0) {
-        if ((x + y) % 2 === 0) {
-          ctx.fillRect(x * cellPx, y * cellPx, cellPx, cellPx);
-        }
+        const hue = base;
+        const fill = `hsl(${hue} 65% 28%)`;
+        const glowA = `hsla(${hue} 100% 65% / 0.28)`;
+        const glowB = `hsla(${hue} 85% 52% / 0.10)`;
+        cellColors[y][x] = { fill, glowA, glowB };
+      } else {
+        const hue = (base + 180) % 360;
+        const fill = `hsl(${hue} 20% 8%)`;
+        const edge = `hsl(${hue} 20% 12%)`;
+        cellColors[y][x] = { fill, edge };
       }
     }
   }
-  ctx.restore();
-  ctx.lineJoin = "round";
-  const wallGrad = ctx.createLinearGradient(0, 0, canvasSize, canvasSize);
-  wallGrad.addColorStop(0, "#07283a");
-  wallGrad.addColorStop(1, "#0a3b52");
+}
+function drawStaticMaze() {
+  sCtx.clearRect(0, 0, canvasSize, canvasSize);
+  const gradFloor = sCtx.createLinearGradient(0, 0, 0, canvasSize);
+  gradFloor.addColorStop(0, "#051b2a");
+  gradFloor.addColorStop(1, "#082836");
+  sCtx.fillStyle = gradFloor;
+  sCtx.fillRect(0, 0, canvasSize, canvasSize);
+  sCtx.lineJoin = "round";
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      if (grid[y][x] === 1) {
-        const px = x * cellPx;
-        const py = y * cellPx;
-        ctx.save();
-        ctx.shadowColor = "rgba(0,0,0,0.75)";
-        ctx.shadowBlur = Math.max(4, cellPx * 0.06);
-        ctx.fillStyle = wallGrad;
+      const px = x * cellPx;
+      const py = y * cellPx;
+      const col = cellColors && cellColors[y] ? cellColors[y][x] : null;
+      if (grid[y][x] === 0) {
+        sCtx.save();
+        if (col) sCtx.fillStyle = col.fill;
+        else sCtx.fillStyle = "#123344";
         roundRect(
-          ctx,
+          sCtx,
           px + 1,
           py + 1,
           cellPx - 2,
@@ -364,15 +399,102 @@ function render() {
           true,
           false
         );
-        ctx.restore();
+        if (col) {
+          const glow = sCtx.createRadialGradient(
+            px + cellPx / 2,
+            py + cellPx / 2,
+            0,
+            px + cellPx / 2,
+            py + cellPx / 2,
+            cellPx * 0.9
+          );
+          glow.addColorStop(0, col.glowA);
+          glow.addColorStop(0.6, col.glowB);
+          glow.addColorStop(1, "rgba(0,0,0,0)");
+          sCtx.globalCompositeOperation = "lighter";
+          sCtx.fillStyle = glow;
+          sCtx.fillRect(px, py, cellPx, cellPx);
+          sCtx.globalCompositeOperation = "source-over";
+        }
+        sCtx.restore();
+      } else {
+        sCtx.save();
+        sCtx.shadowColor = "rgba(0,0,0,0.75)";
+        sCtx.shadowBlur = Math.max(4, cellPx * 0.06);
+        if (col) {
+          const wallGrad = sCtx.createLinearGradient(
+            px,
+            py,
+            px + cellPx,
+            py + cellPx
+          );
+          wallGrad.addColorStop(0, col.fill);
+          wallGrad.addColorStop(1, col.edge);
+          sCtx.fillStyle = wallGrad;
+        } else {
+          sCtx.fillStyle = "#0a2130";
+        }
+        roundRect(
+          sCtx,
+          px + 1,
+          py + 1,
+          cellPx - 2,
+          cellPx - 2,
+          Math.max(4, Math.floor(cellPx * 0.08)),
+          true,
+          false
+        );
+        sCtx.restore();
       }
     }
   }
+}
+
+function drawFinish() {
+  const fx = finish.x * cellPx + cellPx / 2;
+  const fy = finish.y * cellPx + cellPx / 2;
+  const outerSize = Math.max(cellPx * 1.2, 28);
+  const innerSize = Math.max(cellPx * 0.84, 18);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowColor = "rgba(255,200,80,0.85)";
+  ctx.shadowBlur = Math.max(18, cellPx * 0.9);
+  ctx.fillStyle = "rgba(255,200,80,0.06)";
+  roundRect(ctx, fx - outerSize / 2, fy - outerSize / 2, outerSize, outerSize, Math.max(6, cellPx * 0.12), true, false);
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,200,80,0.98)";
+  ctx.lineWidth = Math.max(3, cellPx * 0.12);
+  roundRect(ctx, fx - innerSize / 2, fy - innerSize / 2, innerSize, innerSize, Math.max(6, cellPx * 0.1), false, true);
+  ctx.restore();
+  ctx.save();
+  const ring = ctx.createRadialGradient(fx, fy, 0, fx, fy, innerSize);
+  ring.addColorStop(0, "rgba(255,235,180,0.95)");
+  ring.addColorStop(0.35, "rgba(255,200,80,0.65)");
+  ring.addColorStop(1, "rgba(255,200,80,0)");
+  ctx.fillStyle = ring;
+  ctx.beginPath();
+  ctx.arc(fx, fy, innerSize * 0.46, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.closePath();
+  ctx.restore();
+  ctx.save();
+  ctx.font = `${Math.max(20, Math.floor(cellPx * 0.6))}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = "#fffaf0";
+  ctx.fillText("🏁", fx, fy + 1);
+  ctx.restore();
+}
+
+
+function render() {
+  ctx.clearRect(0, 0, canvasSize, canvasSize);
+  ctx.drawImage(staticCanvas, 0, 0);
   for (const it of items) {
     if (it.got) continue;
     const cx = it.x * cellPx + cellPx / 2;
     const cy = it.y * cellPx + cellPx / 2;
-    ctx.save();
     ctx.beginPath();
     const glow = ctx.createRadialGradient(
       cx,
@@ -388,8 +510,6 @@ function render() {
     ctx.arc(cx, cy, Math.max(10, cellPx * 0.6), 0, Math.PI * 2);
     ctx.fill();
     ctx.closePath();
-    ctx.restore();
-    ctx.save();
     ctx.beginPath();
     const badgeGrad = ctx.createLinearGradient(
       cx - 10,
@@ -405,8 +525,6 @@ function render() {
     ctx.arc(cx, cy, Math.max(8, cellPx * 0.16), 0, Math.PI * 2);
     ctx.fill();
     ctx.closePath();
-    ctx.restore();
-    ctx.save();
     ctx.font = `${Math.max(
       18,
       Math.floor(cellPx * 0.6)
@@ -415,11 +533,49 @@ function render() {
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
     ctx.fillText(it.def.icon || "★", cx, cy + 1);
-    ctx.restore();
+  }
+  for (const c of coins) {
+    if (c.taken) continue;
+    const cx = c.x * cellPx + cellPx / 2;
+    const cy = c.y * cellPx + cellPx / 2;
+    ctx.beginPath();
+    const glow = ctx.createRadialGradient(
+      cx,
+      cy,
+      0,
+      cx,
+      cy,
+      Math.max(12, cellPx * 0.9)
+    );
+    glow.addColorStop(0, "rgba(255,210,90,0.26)");
+    glow.addColorStop(0.6, "rgba(255,180,60,0.08)");
+    glow.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = glow;
+    ctx.arc(cx, cy, Math.max(12, cellPx * 0.9), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.closePath();
+    ctx.beginPath();
+    const coinGrad = ctx.createLinearGradient(cx - 8, cy - 8, cx + 8, cy + 8);
+    coinGrad.addColorStop(0, "#fff5d9");
+    coinGrad.addColorStop(0.6, "#ffd166");
+    coinGrad.addColorStop(1, "#f2b600");
+    ctx.fillStyle = coinGrad;
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = Math.max(6, cellPx * 0.12);
+    ctx.arc(cx, cy, Math.max(6, cellPx * 0.14), 0, Math.PI * 2);
+    ctx.fill();
+    ctx.closePath();
+    ctx.font = `${Math.max(
+      12,
+      Math.floor(cellPx * 0.4)
+    )}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#8a5a00";
+    ctx.fillText("🪙", cx, cy + 1);
   }
   const fx = finish.x * cellPx + cellPx / 2;
   const fy = finish.y * cellPx + cellPx / 2;
-  ctx.save();
   const finishGrad = ctx.createRadialGradient(
     fx,
     fy,
@@ -435,11 +591,8 @@ function render() {
   ctx.arc(fx, fy, Math.max(12, cellPx * 0.9), 0, Math.PI * 2);
   ctx.fill();
   ctx.closePath();
-  ctx.restore();
   const pxCenter = player.x * cellPx + cellPx / 2;
   const pyCenter = player.y * cellPx + cellPx / 2;
-  ctx.save();
-  ctx.globalCompositeOperation = "lighter";
   const aura = ctx.createRadialGradient(
     pxCenter,
     pyCenter,
@@ -451,33 +604,32 @@ function render() {
   aura.addColorStop(0, "rgba(110,190,255,0.18)");
   aura.addColorStop(0.6, "rgba(110,190,255,0.06)");
   aura.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.globalCompositeOperation = "lighter";
   ctx.fillStyle = aura;
   ctx.beginPath();
   ctx.arc(pxCenter, pyCenter, Math.max(22, cellPx * 1.4), 0, Math.PI * 2);
   ctx.fill();
   ctx.closePath();
-  ctx.restore();
   ctx.globalCompositeOperation = "source-over";
-  ctx.save();
   ctx.beginPath();
   ctx.fillStyle = "rgba(255,255,255,0.03)";
   ctx.arc(pxCenter, pyCenter, Math.max(3, cellPx * 0.08), 0, Math.PI * 2);
   ctx.fill();
   ctx.closePath();
-  ctx.restore();
+  drawFinish();
 }
-function roundRect(ctx, x, y, w, h, r, fill, stroke) {
+function roundRect(ctxObj, x, y, w, h, r, fill, stroke) {
   if (typeof stroke === "undefined") stroke = true;
   if (typeof r === "undefined") r = 5;
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.arcTo(x + w, y, x + w, y + h, r);
-  ctx.arcTo(x + w, y + h, x, y + h, r);
-  ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
-  ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
+  ctxObj.beginPath();
+  ctxObj.moveTo(x + r, y);
+  ctxObj.arcTo(x + w, y, x + w, y + h, r);
+  ctxObj.arcTo(x + w, y + h, x, y + h, r);
+  ctxObj.arcTo(x, y + h, x, y, r);
+  ctxObj.arcTo(x, y, x + w, y, r);
+  ctxObj.closePath();
+  if (fill) ctxObj.fill();
+  if (stroke) ctxObj.stroke();
 }
 function canMoveTo(nx, ny) {
   if (nx < 0 || ny < 0 || nx >= size || ny >= size) return false;
@@ -491,6 +643,7 @@ function movePlayer(dx, dy) {
   player.y = ny;
   updatePlayerGifPosition();
   render();
+  checkCoinPickup();
   checkItemPickup();
   checkFinish();
   return true;
@@ -563,8 +716,27 @@ function checkItemPickup() {
     }
   }
 }
+function checkCoinPickup() {
+  for (const c of coins) {
+    if (c.taken) continue;
+    if (c.x === player.x && c.y === player.y) {
+      c.taken = true;
+      coinCount++;
+      updateCoinCounter();
+      playerGif.style.transform = `translate3d(${lastTx}px, ${lastTy}px, 0) scale(1.05)`;
+      setTimeout(() => {
+        playerGif.style.transform = `translate3d(${lastTx}px, ${lastTy}px, 0) scale(1)`;
+      }, 120);
+      render();
+    }
+  }
+}
 function updateHUD() {
   scoreEl.textContent = `Собрано: ${score}`;
+  updateCoinCounter();
+}
+function updateCoinCounter() {
+  coinCounterEl.textContent = `Монеты: ${coinCount}`;
 }
 function checkFinish() {
   if (player.x === finish.x && player.y === finish.y) {
@@ -576,7 +748,7 @@ function checkFinish() {
     stopMemeSound();
     finishGif.src = "6.gif";
     finishTitle.textContent = "Финиш!";
-    finishText.textContent = `Ты дошёл до конца! Собрано предметов: ${score}.`;
+    finishText.textContent = `Ты дошёл до конца! Собрано предметов: ${score}. Монет: ${coinCount}.`;
     if (startTime) {
       const diff = Math.floor((Date.now() - startTime) / 1000);
       const minutes = Math.floor(diff / 60);
@@ -666,9 +838,16 @@ canvas.addEventListener("click", (ev) => {
 });
 document.getElementById("regenBtn").addEventListener("click", () => newMaze());
 window.addEventListener("resize", () => {
-  requestAnimationFrame(updatePlayerGifPosition);
+  requestAnimationFrame(() => {
+    updatePlayerGifPosition();
+    drawStaticMaze();
+    render();
+  });
 });
-setTimeout(updatePlayerGifPosition, 50);
+setTimeout(() => {
+  updatePlayerGifPosition();
+  render();
+}, 50);
 finishModal.addEventListener("click", (e) => {
   if (e.target === finishModal) closeModal();
 });
@@ -680,12 +859,7 @@ function preloadUrls(urls) {
 }
 preloadUrls(memes.concat(itemDefs.map((i) => i.img)).concat(["6.gif"]));
 (function () {
-  const dirMap = {
-    up: [0, -1],
-    down: [0, 1],
-    left: [-1, 0],
-    right: [1, 0],
-  };
+  const dirMap = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
   function handleMobileDir(dir) {
     if (!dir || !dirMap[dir]) return;
     const [dx, dy] = dirMap[dir];
